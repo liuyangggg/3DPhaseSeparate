@@ -52,6 +52,8 @@
 const BlockGroup& g_Block();
 RealField& g_f();
 RealField& g_fStage();
+RealField& g_P();
+RealField& g_Psi();
 RealFieldGroup& g_MacroVars();
 RealFieldGroup& g_MacroVarsCopy();
 
@@ -119,4 +121,5 @@ void DefineBlockConnection(const std::vector<int>& fromBlock,
                            const std::vector<BoundarySurface>& toSurface,
                            const std::vector<VertexType>& connectionType);
 void TransferHalos();
+void TransferHalospsi();
 #endif

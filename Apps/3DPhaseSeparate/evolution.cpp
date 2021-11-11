@@ -80,7 +80,7 @@ void Iterate(const SizeType steps, const SizeType checkPointPeriod,
                 if (((iter + 1) % checkPointPeriod) == 0) {
                     ops_printf("%d iterations!\n", iter + 1);
 #ifdef OPS_3D
-                    UpdateMacroVars3D();
+                    UpdateMacroVarspseudo3D();
 #endif
 #ifdef OPS_2D
                     UpdateMacroVars();
@@ -113,7 +113,7 @@ void Iterate(const Real convergenceCriteria, const SizeType checkPointPeriod,
                 iter = iter + 1;
                 if ((iter % checkPointPeriod) == 0) {
 #ifdef OPS_3D
-                    UpdateMacroVars3D();
+                    UpdateMacroVarspseudo3D();
 #endif
 #ifdef OPS_2D
                     UpdateMacroVars();
@@ -139,7 +139,9 @@ void StreamCollision(const Real time) {
     ops_printf("Calculating the macroscopic variables...\n");
 #endif
 #ifdef OPS_3D
-    UpdateMacroVars3D();
+    UpdateMacroVarspseudo3D();
+    UpdatePCS3D();
+    UpdatePsi3D();
 #endif
 #ifdef OPS_2D
     UpdateMacroVars();
@@ -148,9 +150,11 @@ void StreamCollision(const Real time) {
 #if DebugLevel >= 1
     ops_printf("Calculating the mesoscopic body force term...\n");
 #endif
+    TransferHalospsi();
     UpdateMacroscopicBodyForce(time);
 #ifdef OPS_3D
     PreDefinedBodyForce3D();
+    
 #endif
 #ifdef OPS_2D
     PreDefinedBodyForce();

@@ -378,7 +378,51 @@ void KerInitialiseBGK2nd3D(ACC<Real>& f, const ACC<int>& nodeType,
     }
 #endif  // OPS_3D
 }
-
+void KerCollideBGKIsothermal3Dpseudo(ACC<Real>& fStage, const ACC<Real>& f,
+                               const ACC<Real>& coordinates,
+                               const ACC<int>& nodeType, const ACC<Real>& Rho,
+                               const ACC<Real>& U, const ACC<Real>& V,
+                               const ACC<Real>& W, const Real* tauRef,
+                               const Real* dt, const int* lattIdx) {
+#ifdef OPS_3D
+    VertexType vt = (VertexType)nodeType(0, 0, 0);
+    // collisionRequired: means if collision is required at boundary
+    // e.g., the ZouHe boundary condition explicitly requires collision
+    bool collisionRequired = (vt != VertexType::ImmersedSolid);
+    if (collisionRequired) {
+        Real rho{Rho(0, 0, 0)};
+        Real u{U(0, 0, 0)};
+        Real v{V(0, 0, 0)};
+        Real w{W(0, 0, 0)};
+        const Real T{1};
+        const int polyOrder{2};
+        Real tau = (*tauRef);
+        Real dtOvertauPlusdt = (*dt) / tau;
+        for (int xiIndex = lattIdx[0]; xiIndex <= lattIdx[1]; xiIndex++) {
+            const Real feq{CalcBGKFeqpseudo(xiIndex, rho, u, v, w, T, polyOrder)};
+            if (vt == VertexType::Fluid || vt == VertexType::MDPeriodic) {
+                fStage(xiIndex, 0, 0, 0) =
+                    feq + (1 - dtOvertauPlusdt) * (f(xiIndex, 0, 0, 0) - feq) + fStage(xiIndex, 0, 0, 0);
+            } else {
+                fStage(xiIndex, 0, 0, 0) =
+                    feq + (1 - dtOvertauPlusdt) * (f(xiIndex, 0, 0, 0) - feq);
+            }
+#ifdef CPU
+            const Real res{fStage(xiIndex, 0, 0, 0)};
+            if (isnan(res) || res <= 0 || isinf(res)) {
+                ops_printf(
+                    "Error! Distribution function = %e becomes invalid at  "
+                    "the lattice %i where feq=%e and rho=%e u=%e v=%e w=%e at "
+                    "x=%e y=%e z=%e\n",
+                    res, xiIndex, feq, rho, u, v, w, coordinates(0, 0, 0, 0),
+                    coordinates(1, 0, 0, 0), coordinates(2, 0, 0, 0));
+                assert(!(isnan(res) || res <= 0 || isinf(res)));
+            }
+#endif  // CPU
+        }
+    }
+#endif  // OPS_3D
+}
 void KerCollideBGKIsothermal3D(ACC<Real>& fStage, const ACC<Real>& f,
                                const ACC<Real>& coordinates,
                                const ACC<int>& nodeType, const ACC<Real>& Rho,
@@ -473,18 +517,25 @@ void KerCollideBGKThermal3D(ACC<Real>& fStage, const ACC<Real>& f,
 #endif  // OPS_3D
 }
 
-void KerCalcBodyForce1ST3D(ACC<Real>& fStage, const ACC<Real>& acceration,
-                           const ACC<Real>& Rho, const ACC<int>& nodeType,
-                           const int* lattIdx) {
+void KerCalcBodyForce1ST3D(ACC<Real>& fStage, const ACC<Real>& acceration,const ACC<Real>& Rho,
+                           const ACC<Real>& U, const ACC<Real>& V, const ACC<Real>& W, 
+                           const ACC<int>& nodeType, const Real* tauRef, const int* lattIdx) {
 #ifdef OPS_3D
 
     VertexType vt = (VertexType)nodeType(0, 0, 0);
     if (vt == VertexType::Fluid || vt == VertexType::MDPeriodic) {
-        Real rho{Rho(0, 0, 0)};
+        Real u{U(0, 0, 0)};
+        Real v{V(0, 0, 0)};
+        Real w{W(0, 0, 0)};
         Real g[]{acceration(0, 0, 0, 0), acceration(1, 0, 0, 0),
                  acceration(2, 0, 0, 0)};
+        Real u1 = u + g[0] / Rho(0,0,0);
+        Real v1 = v + g[1] / Rho(0,0,0);
+        Real w1 = w + g[2] / Rho(0,0,0);
         for (int xiIndex = lattIdx[0]; xiIndex <= lattIdx[1]; xiIndex++) {
-            const Real bodyForce{CalcBodyForce(xiIndex, rho, g)};
+            const Real feq{CalcBGKFeqpseudo(xiIndex, Rho(0,0,0), u, v, w, 1, 2)};
+            const Real feq1{CalcBGKFeqpseudo(xiIndex, Rho(0,0,0), u1, v1, w1, 1, 2)};
+        Real bodyForce = feq1-feq;
 #ifdef CPU
             if (isnan(bodyForce) || isinf(bodyForce)) {
                 ops_printf(
@@ -534,7 +585,53 @@ void KerCalcDensity3D(ACC<Real>& Rho, const ACC<Real>& f,
     }
 #endif // OPS_3D
 }
-
+void KerCalcP3D(ACC<Real>& P, const ACC<int>& nodeType,
+                const ACC<Real>& Rho) {
+#ifdef OPS_3D
+    VertexType vt = (VertexType)nodeType(0, 0, 0);
+    if (vt != VertexType::ImmersedSolid) {
+        Real p{0};
+        Real a = 1.0;
+        Real b = 4.0;
+        Real R = 1.0;
+        Real T = 0.7*0.3773*a/(b*R);
+        Real temp = b * Rho(0,0,0) / 4.0;
+        p = Rho(0,0,0) * R * T * (1.0 + temp + temp * temp - temp * temp * temp) / (1 - temp) / (1 - temp) / (1 - temp) - a * Rho(0,0,0) * Rho(0,0,0);
+#ifdef CPU
+        if (isnan(p) || isinf(p)) {
+            ops_printf(
+                "Error! Pressure P=%f becomes invalid! "
+                "Maybe something wrong...\n",
+                p);
+            assert(!(isnan(p) || isinf(p)));
+        }
+#endif
+        P(0, 0, 0) = p;
+    }
+#endif // OPS_3D
+                }
+void KerCalcPsi3D(ACC<Real>& Psi, const ACC<Real>& Rho, const ACC<int>& nodeType,
+                const ACC<Real>& P) {
+#ifdef OPS_3D
+    VertexType vt = (VertexType)nodeType(0, 0, 0);
+    if (vt != VertexType::ImmersedSolid) {
+        Real psi{0};
+        Real G = -1.0;
+        if (P(0, 0, 0) - Rho(0,0,0) / CS / CS > 0) G = 1.0;
+        psi = sqrt((2.0 * (P(0,0,0) - Rho(0,0,0) / CS / CS)) / G * CS * CS);
+#ifdef CPU
+        if (isnan(psi) || isinf(psi)) {
+            ops_printf(
+                "Error! Velocity Psi=%f becomes invalid! "
+                "Maybe something wrong...\n",
+                Psi);
+            assert(!(isnan(Psi(0,0,0)) || isinf(Psi(0,0,0))));
+        }
+#endif
+        Psi(0, 0, 0) = psi;
+    }
+#endif // OPS_3D
+}
 void KerCalcU3D(ACC<Real>& U, const ACC<Real>& f, const ACC<int>& nodeType,
                 const ACC<Real>& Rho, const int* lattIdx) {
 #ifdef OPS_3D
@@ -542,9 +639,9 @@ void KerCalcU3D(ACC<Real>& U, const ACC<Real>& f, const ACC<int>& nodeType,
     if (vt != VertexType::ImmersedSolid) {
         Real u{0};
         for (int xiIdx = lattIdx[0]; xiIdx <= lattIdx[1]; xiIdx++) {
-            u += CS * XI[xiIdx * LATTDIM] * f(xiIdx, 0, 0, 0);
+            u += XI[xiIdx * LATTDIM] * f(xiIdx, 0, 0, 0);
         }
-        u /= Rho(0, 0, 0);
+        u = u / Rho(0, 0, 0);// + 0.5 * acceration(0,0,0,0) / Rho(0, 0, 0);
 #ifdef CPU
         if (isnan(u) || isinf(u)) {
             ops_printf(
@@ -566,9 +663,9 @@ void KerCalcV3D(ACC<Real>& V, const ACC<Real>& f, const ACC<int>& nodeType,
     if (vt != VertexType::ImmersedSolid) {
         Real v{0};
         for (int xiIdx = lattIdx[0]; xiIdx <= lattIdx[1]; xiIdx++) {
-            v += CS * XI[xiIdx * LATTDIM + 1] * f(xiIdx, 0, 0, 0);
+            v += XI[xiIdx * LATTDIM + 1] * f(xiIdx, 0, 0, 0);
         }
-        v /= Rho(0, 0, 0);
+        v = v / Rho(0, 0, 0);// + 0.5 * acceration(1,0,0,0) / Rho(0, 0, 0);
 #ifdef CPU
         if (isnan(v) || isinf(v)) {
             ops_printf(
@@ -590,9 +687,9 @@ void KerCalcW3D(ACC<Real>& W, const ACC<Real>& f, const ACC<int>& nodeType,
     if (vt != VertexType::ImmersedSolid) {
         Real w{0};
         for (int xiIdx = lattIdx[0]; xiIdx <= lattIdx[1]; xiIdx++) {
-            w += CS * XI[xiIdx * LATTDIM + 2] * f(xiIdx, 0, 0, 0);
+            w += XI[xiIdx * LATTDIM + 2] * f(xiIdx, 0, 0, 0);
         }
-        w /= Rho(0, 0, 0);
+        w = w / Rho(0, 0, 0);// + 0.5 * acceration(2,0,0,0) / Rho(0, 0, 0);
 #ifdef CPU
         if (isnan(w) || isinf(w)) {
             ops_printf(

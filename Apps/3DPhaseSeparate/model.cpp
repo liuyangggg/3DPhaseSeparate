@@ -66,12 +66,13 @@ struct lattice {
 // Giving the parameters of commonly used lattices.
 lattice d2q9{2, 9, sqrt(3)};
 lattice d3q19{3, 19, sqrt(3)};
+lattice d3q27{3, 27, sqrt(3)};
 lattice d3q15{3, 15, sqrt(3)};
 lattice d2q16{2, 16, 1};
 lattice d2q36{2, 36, 1};
 
 std::map<std::string, lattice> latticeSet{
-    {"d2q9", d2q9}, {"d3q19", d3q19}, {"d3q15", d3q15}, {"d2q36", d2q36}};
+    {"d2q9", d2q9}, {"d3q19", d3q19}, {"d3q27", d3q27}, {"d3q15", d3q15}, {"d2q36", d2q36}};
 
 /**
  * @brief Find particles with opposite directions for bounce-back type boundary
@@ -151,7 +152,32 @@ void SetupD3Q15Latt(const int startPos) {
     }
     FindReverseXi(startPos, nc15);
 }
-
+void SetupD3Q27Latt(const int startPos) {
+    const int nc27 = 27;
+    Real t000{8 / ((Real)27)};
+    Real t001{2 / ((Real)27)};
+    Real t011{1 / ((Real)54)};
+    Real t111{1 / ((Real)216)};
+    Real t[nc27] = {t000, t001, t001, t001, t001, t001, t001, t011, t011, t011,
+                    t011, t011, t011, t011, t011, t011, t011, t011, t011, t111,
+                    t111, t111, t111, t111, t111, t111, t111};
+    int cxi[nc27] = {0,  1, -1, 0, 0,  0, 0,  1, -1, 1,
+                     -1, 0, 0,  1, -1, 1, -1, 0, 0, 1, 
+                     -1, 1, -1, 1, -1, -1, 1};
+    int cyi[nc27] = {0, 0, 0,  1,  -1, 0, 0, 1, -1, 0,
+                     0, 1, -1, -1, 1,  0, 0, 1, -1, 1
+                     -1, 1, -1, -1, 1, 1, -1};
+    int czi[nc27] = {0,  0, 0,  0, 0, 1,  -1, 0,  0, 1,
+                     -1, 1, -1, 0, 0, -1, 1,  -1, 1, 1
+                     -1, -1, 1, 1, -1, 1, -1};
+    for (int l = 0; l < nc27; l++) {
+        XI[(startPos + l) * LATTDIM] = cxi[l];
+        XI[(startPos + l) * LATTDIM + 1] = cyi[l];
+        XI[(startPos + l) * LATTDIM + 2] = czi[l];
+        WEIGHTS[startPos + l] = t[l];
+    }
+    FindReverseXi(startPos, nc27);
+}
 void SetupD2Q16Latt(const int startPos) {
     // Gauss-Hermite quadrature from the fourth order polynomial
     const int nc16{16};
@@ -272,6 +298,9 @@ void DefineComponents(const std::vector<std::string>& compoNames,
             if ("d3q19" == lattNames[idx]) {
                 SetupD3Q19Latt(startPos);
             }
+            if ("d3q27" == lattNames[idx]) {
+                SetupD3Q27Latt(startPos);
+            }     
             if ("d2q9" == lattNames[idx]) {
                 SetupD2Q9Latt(startPos);
             }
@@ -313,6 +342,9 @@ void DefineComponents(const std::vector<std::string>& compoNames,
     g_fStage().SetDataDim(NUMXI);
     g_fStage().CreateFieldFromScratch(g_Block());
     g_fStage().CreateHalos();
+    g_P().CreateFieldFromScratch(g_Block());
+    g_Psi().CreateFieldFromScratch(g_Block());
+    g_Psi().CreateHalos();
 }
 
 void DefineMacroVars(std::vector<VariableTypes> types,

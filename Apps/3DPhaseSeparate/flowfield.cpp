@@ -74,6 +74,8 @@ std::map<int, ops_reduction>& g_ResidualErrorHandle() {
 
 RealFieldGroup MacroBodyforce;
 const BlockGroup& g_Block() { return BLOCKS; };
+RealField& g_P() { return p; };
+RealField& g_Psi() { return psi; };
 RealField& g_f() { return f; };
 RealField& g_fStage() { return fStage; };
 RealFieldGroup& g_MacroVars() { return MacroVars; };
@@ -118,6 +120,7 @@ void WriteFlowfieldToHdf5(const SizeType timeStep) {
     for (const auto& macroVar : MacroVars) {
         macroVar.second.WriteToHDF5(CASENAME, timeStep);
     }
+    psi.WriteToHDF5(CASENAME, timeStep);
     CoordinateXYZ.WriteToHDF5(CASENAME, timeStep);
     for (const auto& force : MacroBodyforce) {
         force.second.WriteToHDF5(CASENAME, timeStep);
@@ -126,6 +129,7 @@ void WriteFlowfieldToHdf5(const SizeType timeStep) {
 
 void WriteDistributionsToHdf5(const SizeType timeStep) {
     f.WriteToHDF5(CASENAME, timeStep);
+    fStage.WriteToHDF5(CASENAME, timeStep);
 }
 
 void WriteNodePropertyToHdf5(const SizeType timeStep) {
@@ -155,7 +159,9 @@ Real GetMaximumResidual(const SizeType checkPeriod) {
     }
     return maxResError;
 }
-
+void TransferHalospsi() {
+    psi.TransferHalos();
+}
 void TransferHalos() {
     fStage.TransferHalos();
 }

@@ -54,7 +54,15 @@ static inline OPS_FUN_PREFIX Real CalcBGKFeq(const int l, const Real rho, const 
     }
     return WEIGHTS[l] * rho * res;
 }
-
+static inline OPS_FUN_PREFIX Real CalcBGKFeqpseudo(const int l, const Real rho, const Real u, const Real v,
+                const Real w, const Real T, const int polyOrder) {
+    Real cu{(CS * XI[l * LATTDIM] * u * CS + CS * XI[l * LATTDIM + 1] * v * CS +
+             CS * XI[l * LATTDIM + 2] * w * CS)};
+    Real cu2{cu * cu};
+    Real u2{CS * u * u * CS + CS * v * v * CS + CS * w * w * CS};
+    Real res = 1.0 + cu + 0.5 * (cu2 - u2);
+    return WEIGHTS[l] * rho * res;
+}
 static inline OPS_FUN_PREFIX Real CalcBGKFeq(const int l, const Real rho, const Real u, const Real v,
                 const Real w, const Real T, const int polyOrder) {
     Real cu{(CS * XI[l * LATTDIM] * u + CS * XI[l * LATTDIM + 1] * v +

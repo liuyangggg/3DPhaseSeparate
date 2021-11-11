@@ -45,4 +45,29 @@ void KerSetInitialMacroVars(ACC<Real>& rho, ACC<Real>& u, ACC<Real>& v,
     v(0, 0, 0) = 0;
     w(0, 0, 0) = 0;
 }
+void KerUpdateBodyForce(ACC<Real>& acceration, const ACC<Real>& Rho, const ACC<Real>& P,
+                        const ACC<Real>& Psi, const ACC<int>& nodeType, const int* lattIdx) {
+                VertexType vt = (VertexType)nodeType(0, 0, 0);
+                if (vt != VertexType::ImmersedSolid) {
+                    Real G = -1.0;
+                    Real Fx = 0;
+                    Real Fy = 0;
+                    Real Fz = 0;
+                    if (P(0, 0, 0) - Rho(0, 0, 0) / CS / CS > 0) G = 1.0;
+                    for (int xiIndex = lattIdx[0]; xiIndex <= lattIdx[1]; xiIndex++) {
+                         Real cx = XI[xiIndex * LATTDIM];
+                         Real cy = XI[xiIndex * LATTDIM + 1];
+                         Real cz = XI[xiIndex * LATTDIM + 2]; 
+                         Fx += cx * Psi(cx, cy, cz) * WEIGHTS[xiIndex];
+                         Fy += cy * Psi(cx, cy, cz) * WEIGHTS[xiIndex];
+                         Fz += cz * Psi(cx, cy, cz) * WEIGHTS[xiIndex];
+                    }
+                         Fx *= -G * Psi(0, 0, 0);
+                         Fy *= -G * Psi(0, 0, 0);
+                         Fz *= -G * Psi(0, 0, 0);
+                         acceration(0,0,0,0) = Fx;
+                         acceration(1,0,0,0) = Fy;
+                         acceration(2,0,0,0) = Fz;
+                        }
+}
 #endif // CAVITY3D_KERNEL_INC

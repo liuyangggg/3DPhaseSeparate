@@ -84,7 +84,7 @@ void Iterate(void (*cycle)(T), const SizeType steps,
         if (((iter + 1) % checkPointPeriod) == 0) {
             ops_printf("%d iterations!\n", iter + 1);
 #ifdef OPS_3D
-            UpdateMacroVars3D();
+            UpdateMacroVarspseudo3D();
 #endif
 #ifdef OPS_2D
             UpdateMacroVars();
@@ -109,7 +109,7 @@ void Iterate(void (*cycle)(T), const Real convergenceCriteria,
         iter = iter + 1;
         if ((iter % checkPointPeriod) == 0) {
 #ifdef OPS_3D
-            UpdateMacroVars3D();
+            UpdateMacroVarspseudo3D();
 #endif
 #ifdef OPS_2D
             UpdateMacroVars();

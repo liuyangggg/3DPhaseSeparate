@@ -59,6 +59,7 @@ int SPACEDIM{3};
 int SPACEDIM{2};
 #endif // ops_2D
 BlockGroup BLOCKS;
+
 RealField f{"f"};
 RealField fStage{"fStage"};
 RealFieldGroup MacroVars;

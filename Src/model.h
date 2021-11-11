@@ -160,6 +160,9 @@ void DefineInitialCondition(std::vector<InitialType> types,
                             std::vector<int> compoId);
 #ifdef OPS_3D
 void UpdateMacroVars3D();
+void UpdatePCS3D();
+void UpdatePsi3D();
+void UpdateMacroVarspseudo3D();
 void PreDefinedBodyForce3D();
 void PreDefinedInitialCondition3D();
 void PreDefinedCollision3D();

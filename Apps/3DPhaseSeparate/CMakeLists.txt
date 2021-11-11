@@ -6,7 +6,7 @@ set(AppName PhaseSeparate3D)
 set(AppSrc lbm3d_phaseseparate.cpp)
 # A list of C/C++ source and head files from the Src direction
 # (i.e. provided by MPLB) which are used in the application
-set(LibSrc scheme.cpp scheme_wrapper.cpp configuration.cpp model.cpp block.cpp flowfield_wrapper.cpp boundary.cpp boundary_wrapper.cpp)
+set(LibSrc scheme.cpp scheme_wrapper.cpp configuration.cpp block.cpp flowfield_wrapper.cpp boundary.cpp boundary_wrapper.cpp)
 set(LibHeadList type.h flowfield_host_device.h boundary_host_device.h model_host_device.h)
 include_directories(${LibDir})
 # 2D or 3D application
@@ -16,6 +16,7 @@ if (NOT OPTIMISE)
     list(APPEND LibSrcPath ${CMAKE_CURRENT_SOURCE_DIR}/evolution.cpp)
     list(APPEND LibSrcPath ${CMAKE_CURRENT_SOURCE_DIR}/flowfield.cpp)
     list(APPEND LibSrcPath ${CMAKE_CURRENT_SOURCE_DIR}/model_wrapper.cpp)
+    list(APPEND LibSrcPath ${CMAKE_CURRENT_SOURCE_DIR}/model.cpp)
     foreach(Src IN LISTS LibSrc)
         list(APPEND LibSrcPath ${LibDir}/${Src})
     endforeach(Src IN LISTS LibSrc)
