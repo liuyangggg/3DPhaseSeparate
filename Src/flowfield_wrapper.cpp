@@ -102,7 +102,34 @@ void CopyDistribution(RealField& fDest, RealField& fSrc) {
                                  "double", OPS_READ));
     }
 }
-
+void Transformftom(RealField& fDest, RealField& fSrc) {
+    for (const auto& idBlock : g_Block()) {
+        const Block& block{idBlock.second};
+        std::vector<int> iterRng;
+        iterRng.assign(block.WholeRange().begin(), block.WholeRange().end());
+        const int blockIndex{block.ID()};
+        ops_par_loop(Kertransformftom, "Kertransformftom", block.Get(), SpaceDim(),
+                     iterRng.data(),
+                     ops_arg_dat(fDest[blockIndex], NUMXI, LOCALSTENCIL,
+                                 "double", OPS_WRITE),
+                     ops_arg_dat(fSrc[blockIndex], NUMXI, LOCALSTENCIL,
+                                 "double", OPS_READ));
+    }
+}
+void Transformmtof(RealField& fDest, RealField& fSrc) {
+    for (const auto& idBlock : g_Block()) {
+        const Block& block{idBlock.second};
+        std::vector<int> iterRng;
+        iterRng.assign(block.WholeRange().begin(), block.WholeRange().end());
+        const int blockIndex{block.ID()};
+        ops_par_loop(Kertransformmtof, "Kertransformmtof", block.Get(), SpaceDim(),
+                     iterRng.data(),
+                     ops_arg_dat(fDest[blockIndex], NUMXI, LOCALSTENCIL,
+                                 "double", OPS_WRITE),
+                     ops_arg_dat(fSrc[blockIndex], NUMXI, LOCALSTENCIL,
+                                 "double", OPS_READ));
+    }
+}
 // This routine is necessary now due to the following reason:
 // 1. the collision process might not be implemented at some kind of boundary
 // points so that f_stage will not be updated.

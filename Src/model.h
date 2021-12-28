@@ -94,6 +94,7 @@ enum CollisionType {
     Collision_BGKIsothermal2nd = 0,
     Collision_BGKThermal4th = 1,
     Collision_BGKSWE4th = 2,
+    Collision_NMRTIsothermal2nd = 3,
 };
 
 enum BodyForceType { BodyForce_1st = 1, BodyForce_None = 0 };

@@ -90,7 +90,8 @@ NLOHMANN_JSON_SERIALIZE_ENUM(
 NLOHMANN_JSON_SERIALIZE_ENUM(
     CollisionType, {{Collision_BGKIsothermal2nd, "Collision_BGKIsothermal2nd"},
                     {Collision_BGKThermal4th, "Collision_BGKThermal4th"},
-                    {Collision_BGKSWE4th, "Collision_BGKSWE4th"}});
+                    {Collision_BGKSWE4th, "Collision_BGKSWE4th"},
+                    {Collision_NMRTIsothermal2nd, "Collision_NMRTIsothermal2nd"}});
 
 NLOHMANN_JSON_SERIALIZE_ENUM(BodyForceType,
                              {{BodyForce_1st, "BodyForce_1st"},

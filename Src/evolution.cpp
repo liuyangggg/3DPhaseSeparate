@@ -140,6 +140,7 @@ void StreamCollision(const Real time) {
 #endif
 #ifdef OPS_3D
     UpdateMacroVars3D();
+    
 #endif
 #ifdef OPS_2D
     UpdateMacroVars();

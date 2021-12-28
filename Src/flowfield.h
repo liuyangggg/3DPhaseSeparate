@@ -51,7 +51,9 @@
 
 const BlockGroup& g_Block();
 RealField& g_f();
+RealField& g_m();
 RealField& g_fStage();
+RealField& g_mStage();
 RealField& g_P();
 RealField& g_Psi();
 RealFieldGroup& g_MacroVars();
@@ -105,6 +107,8 @@ bool IsTransient();
 void CalcResidualError();
 void DispResidualError(const int iter, const SizeType checkPeriod);
 void CopyDistribution(RealField& fDest, RealField& fSrc);
+void Transformftom(RealField& fDest, RealField& fSrc);
+void Transformmtof(RealField& fDest, RealField& fSrc);
 void CopyBlockEnvelopDistribution(Field<Real>& fDest, Field<Real>& fSrc);
 void NormaliseF(Real* ratio);
 void CopyCurrentMacroVar();

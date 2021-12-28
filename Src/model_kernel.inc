@@ -382,6 +382,54 @@ void KerCollideBGKIsothermal3Dpseudo(ACC<Real>& fStage, const ACC<Real>& f,
                                const ACC<Real>& coordinates,
                                const ACC<int>& nodeType, const ACC<Real>& Rho,
                                const ACC<Real>& U, const ACC<Real>& V,
+                               const ACC<Real>& W, const ACC<Real>& BodyForce, const Real* tauRef,
+                               const Real* dt, const int* lattIdx) {
+#ifdef OPS_3D
+    VertexType vt = (VertexType)nodeType(0, 0, 0);
+    // collisionRequired: means if collision is required at boundary
+    // e.g., the ZouHe boundary condition explicitly requires collision
+    bool collisionRequired = (vt != VertexType::ImmersedSolid);
+    if (collisionRequired) {
+        Real rho{Rho(0, 0, 0)};
+        Real u{U(0, 0, 0)};
+        Real v{V(0, 0, 0)};
+        Real w{W(0, 0, 0)};
+        Real u1{u + BodyForce(0,0,0,0) / 2.0 / rho};
+        Real v1{v + BodyForce(1,0,0,0) / 2.0 / rho};
+        Real w1{w + BodyForce(2,0,0,0) / 2.0 / rho};
+        const Real T{1};
+        const int polyOrder{2};
+        Real tau = (*tauRef);
+        Real dtOvertauPlusdt = (*dt) / tau;
+        for (int xiIndex = lattIdx[0]; xiIndex <= lattIdx[1]; xiIndex++) {
+            const Real feq{CalcBGKBodyForce(xiIndex, rho, u, v, w, T, polyOrder)};
+            if (vt == VertexType::Fluid || vt == VertexType::MDPeriodic) {
+                fStage(xiIndex, 0, 0, 0) =
+                    feq + (1 - dtOvertauPlusdt) * (f(xiIndex, 0, 0, 0) - feq) + fStage(xiIndex, 0, 0, 0);
+            } else {
+                    fStage(xiIndex, 0, 0, 0) =
+                    feq + (1 - dtOvertauPlusdt) * (f(xiIndex, 0, 0, 0) - feq);
+            }
+#ifdef CPU
+            const Real res{fStage(xiIndex, 0, 0, 0)};
+            if (isnan(res) || res <= 0 || isinf(res)) {
+                ops_printf(
+                    "Error! Distribution function = %e becomes invalid at  "
+                    "the lattice %i where feq=%e and rho=%e u=%e v=%e w=%e at "
+                    "x=%e y=%e z=%e\n",
+                    res, xiIndex, feq, rho, u, v, w, coordinates(0, 0, 0, 0),
+                    coordinates(1, 0, 0, 0), coordinates(2, 0, 0, 0));
+                assert(!(isnan(res) || res <= 0 || isinf(res)));
+            }
+#endif  // CPU
+        }
+    }
+#endif  // OPS_3D
+}
+void KerCollideNMRTIsothermal3Dpseudo(ACC<Real>& mStage, const ACC<Real>& m,
+                               const ACC<Real>& coordinates,
+                               const ACC<int>& nodeType, const ACC<Real>& Rho,
+                               const ACC<Real>& U, const ACC<Real>& V,
                                const ACC<Real>& W, const Real* tauRef,
                                const Real* dt, const int* lattIdx) {
 #ifdef OPS_3D
@@ -394,27 +442,31 @@ void KerCollideBGKIsothermal3Dpseudo(ACC<Real>& fStage, const ACC<Real>& f,
         Real u{U(0, 0, 0)};
         Real v{V(0, 0, 0)};
         Real w{W(0, 0, 0)};
+        Real uu{u*u+v*v+w*w};
         const Real T{1};
         const int polyOrder{2};
         Real tau = (*tauRef);
-        Real dtOvertauPlusdt = (*dt) / tau;
+        Real S[27] = {1.0,1.0,1.0,1.0,1.2,1.2,1.2,0.6,1.2,1.2,1.2,1.2,1.2,1.2,1.2,1.2,0.6,1.2,1.2,1.2,1.2,1.2,1.2,1.2,1.2,1.2,1.2};
+        const Real meq[27] = {rho,rho*u,rho*v,rho*w,rho*u*v,rho*u*w,rho*v*w,rho*(1.0+uu),rho*(u*u-v*v),rho*(u*u-w*w),
+                                  rho/CS/CS*u,rho/CS/CS*u,rho/CS/CS*v,rho/CS/CS*w,rho/CS/CS*v,rho/CS/CS*w,0,rho/CS/CS*(1.0/CS/CS+u*u+v*v),
+                                  rho/CS/CS*(1.0/CS/CS+u*u+w*w),rho/CS/CS*(1.0/CS/CS+w*w+v*v),rho/CS/CS*v*w,rho/CS/CS*u*w,rho/CS/CS*u*v,
+                                  rho/CS/CS/CS/CS*u,rho/CS/CS/CS/CS*v,rho/CS/CS/CS/CS*w,rho/CS/CS/CS/CS*uu+rho/CS/CS/CS/CS/CS/CS};
         for (int xiIndex = lattIdx[0]; xiIndex <= lattIdx[1]; xiIndex++) {
-            const Real feq{CalcBGKFeqpseudo(xiIndex, rho, u, v, w, T, polyOrder)};
             if (vt == VertexType::Fluid || vt == VertexType::MDPeriodic) {
-                fStage(xiIndex, 0, 0, 0) =
-                    feq + (1 - dtOvertauPlusdt) * (f(xiIndex, 0, 0, 0) - feq) + fStage(xiIndex, 0, 0, 0);
+                mStage(xiIndex, 0, 0, 0) =
+                    m(xiIndex, 0, 0, 0) - S[xiIndex] * (m(xiIndex, 0, 0, 0) - meq[xiIndex]) + mStage(xiIndex, 0, 0, 0);
             } else {
-                fStage(xiIndex, 0, 0, 0) =
-                    feq + (1 - dtOvertauPlusdt) * (f(xiIndex, 0, 0, 0) - feq);
+                mStage(xiIndex, 0, 0, 0) =
+                    m(xiIndex, 0, 0, 0) - S[xiIndex] * (m(xiIndex, 0, 0, 0) - meq[xiIndex]);
             }
 #ifdef CPU
-            const Real res{fStage(xiIndex, 0, 0, 0)};
+            const Real res{mStage(xiIndex, 0, 0, 0)};
             if (isnan(res) || res <= 0 || isinf(res)) {
                 ops_printf(
                     "Error! Distribution function = %e becomes invalid at  "
                     "the lattice %i where feq=%e and rho=%e u=%e v=%e w=%e at "
                     "x=%e y=%e z=%e\n",
-                    res, xiIndex, feq, rho, u, v, w, coordinates(0, 0, 0, 0),
+                    res, xiIndex, meq[xiIndex], rho, u, v, w, coordinates(0, 0, 0, 0),
                     coordinates(1, 0, 0, 0), coordinates(2, 0, 0, 0));
                 assert(!(isnan(res) || res <= 0 || isinf(res)));
             }
@@ -533,8 +585,8 @@ void KerCalcBodyForce1ST3D(ACC<Real>& fStage, const ACC<Real>& acceration,const 
         Real v1 = v + g[1] / Rho(0,0,0);
         Real w1 = w + g[2] / Rho(0,0,0);
         for (int xiIndex = lattIdx[0]; xiIndex <= lattIdx[1]; xiIndex++) {
-            const Real feq{CalcBGKFeqpseudo(xiIndex, Rho(0,0,0), u, v, w, 1, 2)};
-            const Real feq1{CalcBGKFeqpseudo(xiIndex, Rho(0,0,0), u1, v1, w1, 1, 2)};
+            const Real feq{CalcBGKFeq(xiIndex, Rho(0,0,0), u, v, w, 1, 2)};
+            const Real feq1{CalcBGKFeq(xiIndex, Rho(0,0,0), u1, v1, w1, 1, 2)};
         Real bodyForce = feq1-feq;
 #ifdef CPU
             if (isnan(bodyForce) || isinf(bodyForce)) {

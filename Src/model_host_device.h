@@ -54,7 +54,20 @@ static inline OPS_FUN_PREFIX Real CalcBGKFeq(const int l, const Real rho, const 
     }
     return WEIGHTS[l] * rho * res;
 }
-static inline OPS_FUN_PREFIX Real CalcBGKFeqpseudo(const int l, const Real rho, const Real u, const Real v,
+static inline OPS_FUN_PREFIX Real CalcBGKFeqpseudo3D(const int l, const Real rho, const Real u, const Real v,
+                const Real w, const Real* g, const Real tau) {
+    Real cu{(XI[l * LATTDIM] * u + XI[l * LATTDIM + 1] * v +
+             XI[l * LATTDIM + 2] * w)};
+    Real cF{(XI[l * LATTDIM] * g[0] + XI[l * LATTDIM + 1] * g[1] +
+             XI[l * LATTDIM + 2] * g[2])};
+    Real uF{(u * g[0] + v * g[1] +
+             w * g[2])};
+    Real B = 1.0;
+    Real C = 1.0;
+    Real res = B*cF*CS*CS + C* (cF*cu*CS*CS*CS*CS - uF*CS*CS);
+    return WEIGHTS[l] * res;
+}
+static inline OPS_FUN_PREFIX Real CalcBGKBodyForce(const int l, const Real rho, const Real u, const Real v,
                 const Real w, const Real T, const int polyOrder) {
     Real cu{(CS * XI[l * LATTDIM] * u * CS + CS * XI[l * LATTDIM + 1] * v * CS +
              CS * XI[l * LATTDIM + 2] * w * CS)};
@@ -65,14 +78,14 @@ static inline OPS_FUN_PREFIX Real CalcBGKFeqpseudo(const int l, const Real rho, 
 }
 static inline OPS_FUN_PREFIX Real CalcBGKFeq(const int l, const Real rho, const Real u, const Real v,
                 const Real w, const Real T, const int polyOrder) {
-    Real cu{(CS * XI[l * LATTDIM] * u + CS * XI[l * LATTDIM + 1] * v +
-             CS * XI[l * LATTDIM + 2] * w)};
+    Real cu{(CS * XI[l * LATTDIM] * u * CS + CS * XI[l * LATTDIM + 1] * v * CS +
+             CS * XI[l * LATTDIM + 2] * w * CS)};
     Real c2{(CS * XI[l * LATTDIM] * CS * XI[l * LATTDIM] +
              CS * XI[l * LATTDIM + 1] * CS * XI[l * LATTDIM + 1] +
              CS * XI[l * LATTDIM + 2] * CS * XI[l * LATTDIM + 2])};
     Real cu2{cu * cu};
-    Real u2{u * u + v * v + w * w};
-    Real res = 1.0 + cu + 0.5 * (cu2 - u2 + (T - 1.0) * (c2 - LATTDIM));
+    Real u2{CS * u * u * CS + CS * v * v * CS + CS * w * w * CS};
+    Real res = 1.0 + cu + 0.5 * (cu2 - u2);
     if ((polyOrder) >= 3) {
         res = res +
               cu * (cu2 - 3.0 * u2 + 3.0 * (T - 1.0) * (c2 - LATTDIM - 2.0)) /
