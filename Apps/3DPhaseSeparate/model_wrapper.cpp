@@ -41,6 +41,8 @@ void PreDefinedCollision3D() {
                                     1, LOCALSTENCIL, "double", OPS_READ),
                         ops_arg_dat(g_MacroVars().at(compo.wId).at(blockIndex),
                                     1, LOCALSTENCIL, "double", OPS_READ),
+                        ops_arg_dat(g_MacroBodyforce().at(compo.id).at(blockIndex),
+                                    SpaceDim(), LOCALSTENCIL, "double", OPS_READ),                        
                         ops_arg_gbl(&tau, 1, "double", OPS_READ),
                         ops_arg_gbl(pdt, 1, "double", OPS_READ),
                         ops_arg_gbl(compo.index, 2, "int", OPS_READ));
@@ -73,6 +75,32 @@ void PreDefinedCollision3D() {
                         ops_arg_gbl(pdt, 1, "double", OPS_READ),
                         ops_arg_gbl(compo.index, 2, "int", OPS_READ));
                     break;
+                    /*case Collision_NMRTIsothermal2nd:
+                    ops_par_loop(
+                        KerCollideNMRTIsothermal3Dpseudo, "KerCollideNMRTIsothermal3Dpseudo",
+                        block.Get(), SpaceDim(), iterRng.data(),
+                        ops_arg_dat(g_mStage()[blockIndex], NUMXI, LOCALSTENCIL,
+                                    "double", OPS_WRITE),
+                        ops_arg_dat(g_m()[blockIndex], NUMXI, LOCALSTENCIL,
+                                    "double", OPS_READ),
+                        ops_arg_dat(g_CoordinateXYZ()[blockIndex], SpaceDim(),
+                                    LOCALSTENCIL, "double", OPS_READ),
+                        ops_arg_dat(g_NodeType().at(compo.id).at(blockIndex), 1,
+                                    LOCALSTENCIL, "int", OPS_READ),
+                        ops_arg_dat(g_MacroVars()
+                                        .at(compo.macroVars.at(Variable_Rho).id)
+                                        .at(blockIndex),
+                                    1, LOCALSTENCIL, "double", OPS_READ),
+                        ops_arg_dat(g_MacroVars().at(compo.uId).at(blockIndex),
+                                    1, LOCALSTENCIL, "double", OPS_READ),
+                        ops_arg_dat(g_MacroVars().at(compo.vId).at(blockIndex),
+                                    1, LOCALSTENCIL, "double", OPS_READ),
+                        ops_arg_dat(g_MacroVars().at(compo.wId).at(blockIndex),
+                                    1, LOCALSTENCIL, "double", OPS_READ),
+                        ops_arg_gbl(&tau, 1, "double", OPS_READ),
+                        ops_arg_gbl(pdt, 1, "double", OPS_READ),
+                        ops_arg_gbl(compo.index, 2, "int", OPS_READ));
+                    break;*/
                 default:
                     ops_printf(
                         "The specified collision type is not implemented!\n");

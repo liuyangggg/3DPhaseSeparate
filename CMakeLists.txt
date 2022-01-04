@@ -296,9 +296,7 @@ if (CUDAToolkit_FOUND)
     target_compile_definitions(${AppName}Cuda PRIVATE -DOPS_${SpaceDim}D -DLEVEL=DebugLevel=0)
 endif()
 endmacro(CudaTarget)
-add_subdirectory(Apps/3DCavity)
-add_subdirectory(Apps/2DCavity)
-add_subdirectory(Apps/3DLChannel)
+add_subdirectory(Apps/3DPhaseSeparate)
 add_subdirectory(Tests/FieldBlock)
 
 

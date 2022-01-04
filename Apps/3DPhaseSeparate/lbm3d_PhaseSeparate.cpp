@@ -39,7 +39,7 @@
 #include <string>
 #include "mplb.h"
 #include "ops_seq_v2.h"
-#include "nmrt3d_kernel.inc"
+#include "PhaseSeparate3d_kernel.inc"
 // Provide macroscopic initial conditions
 void SetInitialMacrosVars() {
     for (auto idBlock : g_Block()) {

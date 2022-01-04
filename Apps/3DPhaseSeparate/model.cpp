@@ -161,15 +161,15 @@ void SetupD3Q27Latt(const int startPos) {
     Real t[nc27] = {t000, t001, t001, t001, t001, t001, t001, t011, t011, t011,
                     t011, t011, t011, t011, t011, t011, t011, t011, t011, t111,
                     t111, t111, t111, t111, t111, t111, t111};
-    int cxi[nc27] = {0,  1, -1, 0, 0,  0, 0,  1, -1, 1,
-                     -1, 0, 0,  1, -1, 1, -1, 0, 0, 1, 
-                     -1, 1, -1, 1, -1, -1, 1};
-    int cyi[nc27] = {0, 0, 0,  1,  -1, 0, 0, 1, -1, 0,
-                     0, 1, -1, -1, 1,  0, 0, 1, -1, 1
-                     -1, 1, -1, -1, 1, 1, -1};
-    int czi[nc27] = {0,  0, 0,  0, 0, 1,  -1, 0,  0, 1,
-                     -1, 1, -1, 0, 0, -1, 1,  -1, 1, 1
-                     -1, -1, 1, 1, -1, 1, -1};
+    int cxi[nc27] = {0, 1,-1, 0, 0, 0, 0, 1,-1, 1,
+                    -1, 1,-1, 1,-1, 0, 0, 0, 0, 1, 
+                    -1, 1,-1, 1,-1,-1, 1};
+    int cyi[nc27] = {0, 0, 0, 1,-1, 0, 0, 1, 1,-1,
+                    -1, 0, 0, 0, 0, 1,-1, 1,-1, 1,
+                     1,-1,-1, 1, 1,-1,-1};
+    int czi[nc27] = {0, 0, 0, 0, 0, 1,-1, 0, 0, 0,
+                     0, 1, 1,-1,-1, 1, 1,-1,-1, 1,
+                     1, 1, 1,-1,-1,-1,-1};
     for (int l = 0; l < nc27; l++) {
         XI[(startPos + l) * LATTDIM] = cxi[l];
         XI[(startPos + l) * LATTDIM + 1] = cyi[l];
@@ -328,8 +328,10 @@ void DefineComponents(const std::vector<std::string>& compoNames,
     }
 
     g_f().SetDataDim(NUMXI);
+    g_m().SetDataDim(NUMXI);
     if (timeStep == 0) {
         g_f().CreateFieldFromScratch(g_Block());
+        g_m().CreateFieldFromScratch(g_Block());
         for (auto& pair : g_NodeType()) {
             pair.second.CreateFieldFromScratch(g_Block());
         }
@@ -340,7 +342,9 @@ void DefineComponents(const std::vector<std::string>& compoNames,
         }
     }
     g_fStage().SetDataDim(NUMXI);
+    g_mStage().SetDataDim(NUMXI);
     g_fStage().CreateFieldFromScratch(g_Block());
+    g_mStage().CreateFieldFromScratch(g_Block());
     g_fStage().CreateHalos();
     g_P().CreateFieldFromScratch(g_Block());
     g_Psi().CreateFieldFromScratch(g_Block());

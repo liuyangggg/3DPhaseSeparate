@@ -32,7 +32,7 @@
 #include <random>
 std::random_device rd;
 std::default_random_engine e(rd());
-std::uniform_real_distribution<double> kk(0.2509,0.2609);
+std::uniform_real_distribution<double> kk(0.2309,0.2509);
 #ifndef CAVITY3D_KERNEL_INC
 #define CAVITY3D_KERNEL_INC
 

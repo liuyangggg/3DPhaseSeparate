@@ -394,18 +394,18 @@ void KerCollideBGKIsothermal3Dpseudo(ACC<Real>& fStage, const ACC<Real>& f,
         Real u{U(0, 0, 0)};
         Real v{V(0, 0, 0)};
         Real w{W(0, 0, 0)};
-        Real u1{u + BodyForce(0,0,0,0) / 2.0 / rho};
-        Real v1{v + BodyForce(1,0,0,0) / 2.0 / rho};
-        Real w1{w + BodyForce(2,0,0,0) / 2.0 / rho};
+        Real u1{u + BodyForce(0,0,0,0) / rho};
+        Real v1{v + BodyForce(1,0,0,0) / rho};
+        Real w1{w + BodyForce(2,0,0,0) / rho};
         const Real T{1};
         const int polyOrder{2};
         Real tau = (*tauRef);
         Real dtOvertauPlusdt = (*dt) / tau;
         for (int xiIndex = lattIdx[0]; xiIndex <= lattIdx[1]; xiIndex++) {
-            const Real feq{CalcBGKBodyForce(xiIndex, rho, u, v, w, T, polyOrder)};
+            const Real feq{CalcBGKBodyForce(xiIndex, rho, u1, v1, w1, T, polyOrder)};
             if (vt == VertexType::Fluid || vt == VertexType::MDPeriodic) {
                 fStage(xiIndex, 0, 0, 0) =
-                    feq + (1 - dtOvertauPlusdt) * (f(xiIndex, 0, 0, 0) - feq) + fStage(xiIndex, 0, 0, 0);
+                    feq;// + (1 - dtOvertauPlusdt) * (f(xiIndex, 0, 0, 0) - feq) + fStage(xiIndex, 0, 0, 0);
             } else {
                     fStage(xiIndex, 0, 0, 0) =
                     feq + (1 - dtOvertauPlusdt) * (f(xiIndex, 0, 0, 0) - feq);

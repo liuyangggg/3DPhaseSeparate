@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.18)
 # Application name
 set(AppName PhaseSeparate3D)
 # A list of C/C++ source files (.cpp) developed for the application
-set(AppSrc lbm3d_phaseseparate.cpp)
+set(AppSrc lbm3d_PhaseSeparate.cpp)
 # A list of C/C++ source and head files from the Src direction
 # (i.e. provided by MPLB) which are used in the application
 set(LibSrc scheme.cpp scheme_wrapper.cpp configuration.cpp block.cpp flowfield_wrapper.cpp boundary.cpp boundary_wrapper.cpp)
@@ -25,9 +25,9 @@ if (NOT OPTIMISE)
 else()
     # set the files needed to be translated by ops.py from the app side
     # source file enclosing wrap function
-    set(AppSrcGenList lbm3d_phaseseparate.cpp)
+    set(AppSrcGenList lbm3d_nmrt.cpp)
     # source file for kernel functions
-    set(AppKernelGenList phaseseparate3d_kernel.inc)
+    set(AppKernelGenList nmrt3d_kernel.inc)
     # if any variables are declared in both CPU and GPU memory space.
     set(AppHeadList "")
     CreateTempDir()
